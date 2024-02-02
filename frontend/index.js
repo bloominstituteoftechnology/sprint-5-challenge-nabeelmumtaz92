@@ -36,86 +36,75 @@ async function loadData() {
     const card = createLearnerCard(learner);
     cardsContainer.appendChild(card);
   });
-
-  // Update the info paragraph once all cards are loaded
-  const infoParagraph = document.querySelector('.info');
-  if (infoParagraph) {
-    infoParagraph.textContent = 'No learner is selected';
-  }
-
-  // Deselect cards when clicking outside of them
-  document.addEventListener('click', function(event) {
-    if (!event.target.closest('.card')) {
-      deselectAllCards();
-      if (infoParagraph) {
-        infoParagraph.textContent = 'No learner is selected';
-      }
-    }
-  });
-}
-
-function deselectAllCards() {
-  document.querySelectorAll('.card.selected').forEach(card => {
-    card.classList.remove('selected');
-    card.querySelector('ul').style.display = 'none';
-  });
 }
 
 function createLearnerCard(learner) {
   const card = document.createElement('div');
   card.className = 'card';
-  card.innerHTML = `
-    <h3>${learner.fullName}</h3> <!-- ID will be conditionally displayed -->
-    <div>${learner.email}</div>
-    <h4 class="mentors-header">&#9658; Mentors</h4> <!-- Arrow points right initially, placed to the left -->
-    <ul style="display: none;">${learner.mentors.map(name => `<li>${name}</li>`).join('')}</ul>
-  `;
 
-  // Toggle mentors list and arrow direction
-  card.querySelector('.mentors-header').addEventListener('click', function(event) {
-    event.stopPropagation();
-    const ul = this.nextElementSibling;
-    const isListVisible = ul.style.display === 'block';
-    ul.style.display = isListVisible ? 'none' : 'block';
-    this.innerHTML = isListVisible ? '&#9658; Mentors' : '&#9660; Mentors'; // Update arrow direction
-  });
+  const name = document.createElement('h3');
+  name.textContent = learner.fullName; // Initially, don't show ID
+  card.appendChild(name);
 
-  // Handle card selection/deselection
+  const email = document.createElement('div');
+  email.textContent = learner.email;
+  card.appendChild(email);
+
+  const mentorsHeader = document.createElement('h4');
+mentorsHeader.className = 'mentors-header';
+
+const arrow = document.createElement('span'); // Create a span for the arrow
+arrow.textContent = '►'; // Use a character entity alternative
+mentorsHeader.appendChild(arrow);
+
+const mentorsText = document.createElement('span'); // Create a span for the text "Mentors"
+mentorsText.textContent = ' Mentors';
+mentorsHeader.appendChild(mentorsText);
+
+card.appendChild(mentorsHeader);
+
+const mentorsList = document.createElement('ul');
+mentorsList.style.display = 'none';
+learner.mentors.forEach(mentorName => {
+  const mentorItem = document.createElement('li');
+  mentorItem.textContent = mentorName;
+  mentorsList.appendChild(mentorItem);
+});
+card.appendChild(mentorsList);
+
+mentorsHeader.addEventListener('click', function(event) {
+  event.stopPropagation();
+  mentorsList.style.display = mentorsList.style.display === 'block' ? 'none' : 'block';
+  arrow.textContent = mentorsList.style.display === 'block' ? '▼' : '►'; // Update the arrow based on the list's visibility
+});
+
   card.addEventListener('click', function(event) {
     event.stopPropagation();
-    const previouslySelectedCard = document.querySelector('.card.selected');
-    // If there's a previously selected card and it's not the current card, deselect it
-    if (previouslySelectedCard && previouslySelectedCard !== this) {
-      previouslySelectedCard.classList.remove('selected');
-      previouslySelectedCard.querySelector('ul').style.display = 'none';
-      previouslySelectedCard.querySelector('.mentors-header').innerHTML = '&#9658; Mentors'; // Reset arrow
-      previouslySelectedCard.querySelector('h3').textContent = previouslySelectedCard.querySelector('h3').textContent.replace(/, ID \d+/, ''); // Remove ID for other cards
-    }
-
-    // Toggle current card's selection state
-    const isSelected = this.classList.toggle('selected');
-    const h3 = this.querySelector('h3');
+    const isSelected = card.classList.toggle('selected');
     if (isSelected) {
-      h3.textContent = `${learner.fullName}, ID ${learner.id}`; // Show ID
+      name.textContent = `${learner.fullName}, ID ${learner.id}`;
     } else {
-      h3.textContent = `${learner.fullName}`; // Hide ID
-      this.querySelector('ul').style.display = 'none'; // Hide mentors list
-      this.querySelector('.mentors-header').innerHTML = '&#9658; Mentors'; // Reset arrow
+      name.textContent = learner.fullName; // Hide ID if deselected, though current logic keeps it selected
     }
 
-    // Update info paragraph based on selection
-    const infoParagraph = document.querySelector('.info');
-    if (infoParagraph) {
-      infoParagraph.textContent = isSelected ? `The selected learner is ${learner.fullName}` : 'No learner is selected';
-    }
+    // Ensure only one card is selected at a time
+    document.querySelectorAll('.card.selected').forEach(selectedCard => {
+      if (selectedCard !== card) {
+        selectedCard.classList.remove('selected');
+        const h3 = selectedCard.querySelector('h3');
+        h3.textContent = selectedCard.querySelector('h3').textContent.replace(/, ID \d+/, '');
+        selectedCard.querySelector('ul').style.display = 'none';
+        selectedCard.querySelector('.mentors-header').innerHTML = '&#9658; Mentors';
+      }
+    });
   });
 
   return card;
 }
 
-
 // Ensure everything is loaded before running the script
 document.addEventListener('DOMContentLoaded', loadData);
+
   // 👆 WORK WORK ABOVE THIS LINE 👆
 }
 
